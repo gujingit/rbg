@@ -111,6 +111,7 @@ func (r *RoleBasedGroupScalingAdapterReconciler) Reconcile(ctx context.Context, 
 	}
 
 	// check scale target exist failed, update phase to unbound
+	// If the rbg is nil, the getTargetRoleErr will not be nil. So it's safe to skip check if the rbg is nil.
 	if getTargetRoleErr != nil {
 		r.recorder.Eventf(
 			rbgScalingAdapter, corev1.EventTypeNormal, FailedGetRBGRole,
@@ -130,11 +131,8 @@ func (r *RoleBasedGroupScalingAdapterReconciler) Reconcile(ctx context.Context, 
 	}
 
 	// add owner reference
-	if !rbgScalingAdapter.ContainsRBGOwner(rbg) {
-		if err := r.UpdateAdapterOwnerReference(ctx, rbgScalingAdapter, rbg); err != nil {
-			return ctrl.Result{}, err
-		}
-		return ctrl.Result{RequeueAfter: 1}, nil
+	if err := r.UpdateAdapterOwnerReference(ctx, rbgScalingAdapter, rbg); err != nil {
+		return ctrl.Result{}, err
 	}
 
 	// check scale target exist succeed, init adapter status with phase bound, selector and initial replicas

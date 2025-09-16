@@ -14,17 +14,14 @@ func IsScalingAdapterManagedByRBG(
 	scalingAdapter *workloadsv1alpha.RoleBasedGroupScalingAdapter,
 	rbg *workloadsv1alpha.RoleBasedGroup,
 ) bool {
-	if scalingAdapter == nil || rbg == nil {
+	if scalingAdapter == nil {
 		return false
 	}
 
-	for _, owner := range scalingAdapter.OwnerReferences {
-		if owner.UID == rbg.UID {
-			return true
-		}
-	}
-
-	return false
+	// If rbg is nil, it could be that the rbg has not been created yet. Just checking if the scalingAdapter's
+	// OwnerReference is set to the rolebasedgroup controller.
+	// If the rbg already exists, then check if the uid in the ownerReference is equal.
+	return scalingAdapter.ContainsRBGOwner(rbg)
 }
 
 func IsScalingAdapterEnable(roleSpec *workloadsv1alpha.RoleSpec) bool {

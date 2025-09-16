@@ -73,8 +73,12 @@ func (rbg *RoleBasedGroup) EnableGangScheduling() bool {
 
 func (rbgsa *RoleBasedGroupScalingAdapter) ContainsRBGOwner(rbg *RoleBasedGroup) bool {
 	for _, owner := range rbgsa.OwnerReferences {
-		if owner.UID == rbg.UID {
-			return true
+		if owner.Kind == "RoleBasedGroup" {
+			// If rbg is nil, it could be that the rbg has not been created yet.
+			// Just checking if the scalingAdapter's OwnerReference is set to the rolebasedgroup controller.
+			if rbg == nil || owner.UID == rbg.UID {
+				return true
+			}
 		}
 	}
 	return false
